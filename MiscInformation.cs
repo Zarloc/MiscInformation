@@ -38,19 +38,16 @@ namespace MiscInformation
             {84, 77.7f}
         };
 
-        private RectangleF bounds = RectangleF.Empty;
         private TimeCache<bool> CalcXp;
         private bool CanRender;
         private DebugInformation debugInformation;
         private Vector2N drawTextVector2;
         private string fps = "";
         private string latency = "";
-        private Vector2 leftEndVector2, rightEndVector2;
-        private Vector2 leftPanelStartDrawPoint = Vector2.Zero;
         private RectangleF leftPanelStartDrawRect = RectangleF.Empty;
         private TimeCache<bool> LevelPenalty;
         private double levelXpPenalty, partyXpPenalty;
-        private float maxX, maxY, percentGot;
+        private float percentGot;
         private double partytime = 4000;
         private string ping = "";
         private DateTime startTime, lastTime;
@@ -63,7 +60,6 @@ namespace MiscInformation
         private string xpGetLeft = "";
         private string xpRate = "";
         private string xpReceivingText = "";
-
 
         public float GetEffectiveLevel(int monsterLevel)
         {
@@ -106,9 +102,6 @@ namespace MiscInformation
 
                 xpGetLeft =
                     $"Got: {ConvertHelper.ToShorten(getXp, "0.00")} ({percentGot:P3})  Left: {ConvertHelper.ToShorten(xpLeftQ, "0.00")}";
-
-                maxX = MathHepler.Max(Graphics.MeasureText(fps).X, Graphics.MeasureText(ping).X, Graphics.MeasureText(latency).X,
-                           Graphics.MeasureText(areaName).X, Graphics.MeasureText(xpReceivingText).X) * 1.5f;
 
                 if (partytime > 4900)
                 {
@@ -264,56 +257,58 @@ namespace MiscInformation
         {
             if (!CanRender)
                 return;
-            Vector2 origStartPoint = GameController.LeftPanel.StartDrawPoint;
-            float miscInfoStartY = origStartPoint.Y;
-            leftPanelStartDrawPoint = origStartPoint.Translate(
-                -GameController.IngameState.IngameUi.MapSideUI.Width, 0).Translate(
-                Settings.DrawXOffset.Value, 0);
-            leftPanelStartDrawRect = new RectangleF(leftPanelStartDrawPoint.X, leftPanelStartDrawPoint.Y, 1, 1);
+            var origStartPoint = GameController.LeftPanel.StartDrawPoint;
 
-            leftPanelStartDrawPoint.X -= maxX;
-            startY = leftPanelStartDrawPoint.Y;
+            var rightHalfDrawPoint = origStartPoint.Translate(
+                Settings.DrawXOffset.Value - GameController.IngameState.IngameUi.MapSideUI.Width);
+            leftPanelStartDrawRect = new RectangleF(rightHalfDrawPoint.X, rightHalfDrawPoint.Y, 1, 1);
 
-            //00:00
-            drawTextVector2 = Graphics.DrawText(Time, leftPanelStartDrawPoint, Settings.TimerTextColor);
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
+            var leftSideItems = new[]
+            {
+                //00:00
+                (Time, Settings.TimerTextColor),
+                //fps:(100)
+                (fps, Settings.FpsTextColor),
+                //ping:(100)
+                (ping, Settings.FpsTextColor)
+            };
 
-            //fps:(100)
-            drawTextVector2 = Graphics.DrawText(fps, leftPanelStartDrawPoint, Settings.FpsTextColor);
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
+            var rightSideItems = new[]
+            {
+                //NameArea
+                (areaName, GameController.Area.CurrentArea.AreaColorName),
+                //-h-m-s to level
+                (timeLeft, Settings.TimeLeftColor.Value),
+                //0,00 xph*%
+                (xpReceivingText, Settings.XphTextColor.Value),
+                //GotLeft
+                (xpGetLeft, Settings.XphTextColor.Value)
+            };
+            var rightTextBounds = leftSideItems.Select(x => Graphics.MeasureText(x.Item1)).ToList()
+                switch { var s => new Vector2N(s.DefaultIfEmpty(Vector2N.Zero).Max(x => x.X), s.Sum(x => x.Y)) };
+            var leftTextBounds = rightSideItems.Select(x => Graphics.MeasureText(x.Item1)).ToList()
+                switch { var s => new Vector2N(s.DefaultIfEmpty(Vector2N.Zero).Max(x => x.X), s.Sum(x => x.Y)) };
 
-            //ping:(100)
-            drawTextVector2 = Graphics.DrawText(ping, leftPanelStartDrawPoint, Settings.FpsTextColor);
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
-            leftEndVector2 = leftPanelStartDrawPoint;
-            leftPanelStartDrawPoint.X += maxX;
-            leftPanelStartDrawPoint.Y = startY;
-
-            //NameArea
-            drawTextVector2 = Graphics.DrawText(areaName, leftPanelStartDrawPoint, GameController.Area.CurrentArea.AreaColorName,
-                FontAlign.Right);
-
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
-
-            //-h-m-s to level
-            drawTextVector2 = Graphics.DrawText(timeLeft, leftPanelStartDrawPoint, Settings.TimeLeftColor, FontAlign.Right);
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
-
-            //0,00 xph*%
-            drawTextVector2 = Graphics.DrawText(xpReceivingText, leftPanelStartDrawPoint, Settings.XphTextColor, FontAlign.Right);
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
-
-            //GotLeft
-            drawTextVector2 = Graphics.DrawText(xpGetLeft, leftPanelStartDrawPoint, Settings.XphTextColor, FontAlign.Right);
-            leftPanelStartDrawPoint.Y += drawTextVector2.Y;
-            rightEndVector2 = leftPanelStartDrawPoint;
-            var max = Math.Max(rightEndVector2.Y - miscInfoStartY, leftEndVector2.Y + 5 - miscInfoStartY);
-            bounds = new RectangleF(leftEndVector2.X, startY - 2, rightEndVector2.X - leftEndVector2.X, max);
-
-            // Graphics.DrawImage("preload-start.png", bounds, Settings.BackgroundColor);
-            // Graphics.DrawImage("preload-end.png", bounds, Settings.BackgroundColor);
+            var sumX = rightTextBounds.X + leftTextBounds.X + 5;
+            var maxY = Math.Max(rightTextBounds.Y, leftTextBounds.Y);
+            var leftHalfDrawPoint = rightHalfDrawPoint with { X = rightHalfDrawPoint.X - sumX };
+            startY = leftHalfDrawPoint.Y;
+            var bounds = new RectangleF(leftHalfDrawPoint.X, startY - 2, sumX, maxY);
             Graphics.DrawImage("preload-new.png", bounds, Settings.BackgroundColor);
-            GameController.LeftPanel.StartDrawPoint = new Vector2(origStartPoint.X, max + 10);
+
+            foreach (var (text, color) in leftSideItems)
+            {
+                drawTextVector2 = Graphics.DrawText(text, leftHalfDrawPoint, color);
+                leftHalfDrawPoint.Y += drawTextVector2.Y;
+            }
+
+            foreach (var (text, color) in rightSideItems)
+            {
+                drawTextVector2 = Graphics.DrawText(text, rightHalfDrawPoint, color, FontAlign.Right);
+                rightHalfDrawPoint.Y += drawTextVector2.Y;
+            }
+
+            GameController.LeftPanel.StartDrawPoint = new Vector2(origStartPoint.X, origStartPoint.Y + maxY + 10);
         }
     }
 }
