@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms; 
+using System.Windows.Forms;
 using ExileCore;
 using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.MemoryObjects;
@@ -174,8 +174,12 @@ namespace MiscInformation
             var calcXpValue = CalcXp.Value;
             //var ingameStateCurFps = GameController?.Game?.IngameState?.CurFps ?? 1.0f;
             //debugInformation.Tick = ingameStateCurFps;
+            var areaSuffix = (GameController.Area.CurrentArea.RealLevel >= 68)
+                ? $" - T{GameController.Area.CurrentArea.RealLevel - 67}"
+                : "";
+
             fps = $"fps:(N/A)"; // ({ingameStateCurFps})";
-            areaName = $"{GameController.Area.CurrentArea.DisplayName}";
+            areaName = $"{GameController.Area.CurrentArea.DisplayName}{areaSuffix}";
             latency = $"({GameController.Game.IngameState.ServerData.Latency})";
             ping = $"ping:({GameController.Game.IngameState.ServerData.Latency})";
         }
