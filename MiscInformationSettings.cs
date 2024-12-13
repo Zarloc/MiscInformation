@@ -9,13 +9,13 @@ namespace MiscInformation
         public MiscInformationSettings()
         {
             BackgroundColor = Color.FromArgb(120, 0, 0, 0);
-            AreaTextColor = Color.FromArgb(255, 255, 200, 140);
-            XphTextColor = Color.FromArgb(255, 130, 190, 220);
-            XphGetLeft = Color.FromArgb(255, 130, 190, 220);
-            TimeLeftColor = Color.FromArgb(255, 130, 190, 220);
-            FpsTextColor = Color.FromArgb(255, 130, 190, 220);
-            TimerTextColor = Color.FromArgb(255, 130, 190, 220);
-            LatencyTextColor = Color.FromArgb(255, 130, 190, 220);
+            AreaTextColor = Color.FromArgb(140, 200, 255, 140);
+            XphTextColor = Color.FromArgb(220, 190, 130, 220);
+            XphGetLeft = Color.FromArgb(220, 190, 130, 220);
+            TimeLeftColor = Color.FromArgb(220, 190, 130, 220);
+            FpsTextColor = Color.FromArgb(220, 190, 130, 220);
+            TimerTextColor = Color.FromArgb(220, 190, 130, 220);
+            LatencyTextColor = Color.FromArgb(220, 190, 130, 220);
         }
 
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
