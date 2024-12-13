@@ -14,10 +14,12 @@
       <HintPath>$(exapiPackage)\ExileCore2.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="GameOffsets2">
+      <HintPath>$(exapiPackage)\GameOffsets2.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="LinqFaster" Version="1.0.0" />
-    <PackageReference Include="SharpDX" Version="4.2.0" />
-    <PackageReference Include="SharpDX.Mathematics" Version="4.2.0" />
   </ItemGroup>
 </Project>
