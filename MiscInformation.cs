@@ -1,18 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
-using ExileCore;
-using ExileCore.PoEMemory.Components;
-using ExileCore.PoEMemory.MemoryObjects;
-using ExileCore.Shared;
-using ExileCore.Shared.Cache;
-using ExileCore.Shared.Enums;
-using ExileCore.Shared.Helpers;
-using JM.LinqFaster;
-using SharpDX;
-using Input = ExileCore.Input;
-using Vector2N = System.Numerics.Vector2;
+using ExileCore2;
+using ExileCore2.PoEMemory.Components;
+using ExileCore2.PoEMemory.MemoryObjects;
+using ExileCore2.Shared;
+using ExileCore2.Shared.Cache;
+using ExileCore2.Shared.Enums;
+using ExileCore2.Shared.Helpers;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MiscInformation
 {
@@ -40,15 +36,14 @@ namespace MiscInformation
 
         private TimeCache<bool> CalcXp;
         private bool CanRender;
-        private DebugInformation debugInformation;
-        private Vector2N drawTextVector2;
+        private Vector2 drawTextVector2;
         private string fps = "";
         private string latency = "";
         private RectangleF leftPanelStartDrawRect = RectangleF.Empty;
         private TimeCache<bool> LevelPenalty;
         private double levelXpPenalty, partyXpPenalty;
         private float percentGot;
-        private double partytime = 4000;
+        private double partyTime = 4000;
         private string ping = "";
         private DateTime startTime, lastTime;
         private long startXp, getXp, xpLeftQ;
@@ -69,24 +64,14 @@ namespace MiscInformation
         public override void OnLoad()
         {
             Order = -50;
-            Graphics.InitImage("preload-start.png");
-            Graphics.InitImage("preload-end.png");
-            Graphics.InitImage("preload-new.png");
         }
 
         public override bool Initialise()
         {
-            Input.RegisterKey(Keys.F10);
-
-            Input.ReleaseKey += (sender, keys) =>
-            {
-                if (keys == Keys.F10) Settings.Enable.Value = !Settings.Enable;
-            };
-
             GameController.LeftPanel.WantUse(() => Settings.Enable);
             CalcXp = new TimeCache<bool>(() =>
             {
-                partytime += time;
+                partyTime += time;
                 time = 0;
                 CalculateXp();
                 var areaCurrentArea = GameController.Area.CurrentArea;
@@ -96,14 +81,13 @@ namespace MiscInformation
 
                 timeSpan = DateTime.UtcNow - areaCurrentArea.TimeEntered;
 
-                // Time = $"{timeSpan.TotalMinutes:00}:{timeSpan.Seconds:00}";
                 Time = AreaInstance.GetTimeString(timeSpan);
                 xpReceivingText = $"{xpRate}  *{levelXpPenalty * partyXpPenalty:p0}";
 
                 xpGetLeft =
                     $"Got: {ConvertHelper.ToShorten(getXp, "0.00")} ({percentGot:P3})  Left: {ConvertHelper.ToShorten(xpLeftQ, "0.00")}";
 
-                if (partytime > 4900)
+                if (partyTime > 4900)
                 {
                     var levelPenaltyValue = LevelPenalty.Value;
                 }
@@ -121,7 +105,6 @@ namespace MiscInformation
             GameController.EntityListWrapper.PlayerUpdate += OnEntityListWrapperOnPlayerUpdate;
             OnEntityListWrapperOnPlayerUpdate(this, GameController.Player);
 
-            debugInformation = new DebugInformation("Game FPS", "Collect game fps", false);
             return true;
         }
 
@@ -143,10 +126,9 @@ namespace MiscInformation
             LevelPenalty.ForceUpdate();
         }
 
-        public override Job Tick()
+        public override void Tick()
         {
             TickLogic();
-            return null;
         }
 
         private void TickLogic()
@@ -173,7 +155,6 @@ namespace MiscInformation
 
             var calcXpValue = CalcXp.Value;
             //var ingameStateCurFps = GameController?.Game?.IngameState?.CurFps ?? 1.0f;
-            //debugInformation.Tick = ingameStateCurFps;
             var areaSuffix = (GameController.Area.CurrentArea.RealLevel >= 68)
                 ? $" - T{GameController.Area.CurrentArea.RealLevel - 67}"
                 : "";
@@ -253,7 +234,7 @@ namespace MiscInformation
 
             var levels = entities.Select(y => y.GetComponent<Player>()?.Level ?? 100).ToList();
             var characterLevel = GameController.Player.GetComponent<Player>()?.Level ?? 100;
-            var partyXpPenalty = Math.Pow(characterLevel + 10, 2.71) / levels.SumF(level => Math.Pow(level + 10, 2.71));
+            var partyXpPenalty = Math.Pow(characterLevel + 10, 2.71) / levels.Sum(level => Math.Pow(level + 10, 2.71));
             return partyXpPenalty * levels.Count;
         }
 
@@ -274,7 +255,7 @@ namespace MiscInformation
                 //fps:(100)
                 (fps, Settings.FpsTextColor),
                 //ping:(100)
-                (ping, Settings.FpsTextColor)
+                (ping, Settings.LatencyTextColor)
             };
 
             var rightSideItems = new[]
@@ -286,19 +267,20 @@ namespace MiscInformation
                 //0,00 xph*%
                 (xpReceivingText, Settings.XphTextColor.Value),
                 //GotLeft
-                (xpGetLeft, Settings.XphTextColor.Value)
+                (xpGetLeft, Settings.XphGetLeft.Value)
             };
             var rightTextBounds = leftSideItems.Select(x => Graphics.MeasureText(x.Item1)).ToList()
-                switch { var s => new Vector2N(s.DefaultIfEmpty(Vector2N.Zero).Max(x => x.X), s.Sum(x => x.Y)) };
+                switch { var s => new Vector2(s.DefaultIfEmpty(Vector2.Zero).Max(x => x.X), s.Sum(x => x.Y)) };
             var leftTextBounds = rightSideItems.Select(x => Graphics.MeasureText(x.Item1)).ToList()
-                switch { var s => new Vector2N(s.DefaultIfEmpty(Vector2N.Zero).Max(x => x.X), s.Sum(x => x.Y)) };
+                switch { var s => new Vector2(s.DefaultIfEmpty(Vector2.Zero).Max(x => x.X), s.Sum(x => x.Y)) };
 
             var sumX = rightTextBounds.X + leftTextBounds.X + 5;
             var maxY = Math.Max(rightTextBounds.Y, leftTextBounds.Y);
             var leftHalfDrawPoint = rightHalfDrawPoint with { X = rightHalfDrawPoint.X - sumX };
             startY = leftHalfDrawPoint.Y;
             var bounds = new RectangleF(leftHalfDrawPoint.X, startY - 2, sumX, maxY);
-            Graphics.DrawImage("preload-new.png", bounds, Settings.BackgroundColor);
+
+            Graphics.DrawBox(bounds, Settings.BackgroundColor);
 
             foreach (var (text, color) in leftSideItems)
             {

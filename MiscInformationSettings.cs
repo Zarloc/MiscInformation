@@ -1,6 +1,6 @@
-﻿using ExileCore.Shared.Interfaces;
-using ExileCore.Shared.Nodes;
-using SharpDX;
+﻿using ExileCore2.Shared.Interfaces;
+using ExileCore2.Shared.Nodes;
+using System.Drawing;
 
 namespace MiscInformation
 {
@@ -8,14 +8,14 @@ namespace MiscInformation
     {
         public MiscInformationSettings()
         {
-            BackgroundColor = new ColorBGRA(0, 0, 0, 255);
-            AreaTextColor = new ColorBGRA(140, 200, 255, 255);
-            XphTextColor = new ColorBGRA(220, 190, 130, 255);
-            XphGetLeft = new ColorBGRA(220, 190, 130, 255);
-            TimeLeftColor = new ColorBGRA(220, 190, 130, 255);
-            FpsTextColor = new ColorBGRA(220, 190, 130, 255);
-            TimerTextColor = new ColorBGRA(220, 190, 130, 255);
-            LatencyTextColor = new ColorBGRA(220, 190, 130, 255);
+            BackgroundColor = Color.FromArgb(120, 0, 0, 0);
+            AreaTextColor = Color.FromArgb(255, 255, 200, 140);
+            XphTextColor = Color.FromArgb(255, 130, 190, 220);
+            XphGetLeft = Color.FromArgb(255, 130, 190, 220);
+            TimeLeftColor = Color.FromArgb(255, 130, 190, 220);
+            FpsTextColor = Color.FromArgb(255, 130, 190, 220);
+            TimerTextColor = Color.FromArgb(255, 130, 190, 220);
+            LatencyTextColor = Color.FromArgb(255, 130, 190, 220);
         }
 
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
